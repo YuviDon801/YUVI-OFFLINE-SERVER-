@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YUVI SERVER 3.0</title>
+    <style>
+        body { background-color: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background-color: #111; padding: 25px; border-radius: 15px; box-shadow: 0 0 20px #ff005533; width: 320px; }
+        h2 { color: #ff0055; text-align: center; margin-bottom: 20px; font-size: 22px; }
+        label { font-size: 11px; color: #888; display: block; margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; margin-bottom: 15px; background: #1a1a1a; border: 1px solid #333; border-radius: 5px; color: white; box-sizing: border-box; }
+        .btn-start { width: 100%; padding: 12px; background: #ff0055; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .status { color: #00ffcc; font-size: 12px; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>YUVI SERVER 3.0</h2>
+    <form action="/start" method="POST" enctype="multipart/form-data">
+        <label>Target Group</label>
+        <input type="text" name="target_id" placeholder="Enter ID" required>
+        <label>Hater Name</label>
+        <input type="text" name="hater_name" placeholder="Enter Hater Name">
+        <label>Cookie File (.txt)</label>
+        <input type="file" name="token_file" required>
+        <label>Gali File (.txt)</label>
+        <input type="file" name="message_file" required>
+        <label>Delay (Seconds)</label>
+        <input type="number" name="delay" value="2">
+        <button type="submit" class="btn-start">START LOADING</button>
+    </form>
+    <div class="status">Waiting for Command...</div>
+</div>
+</body>
+</html>
