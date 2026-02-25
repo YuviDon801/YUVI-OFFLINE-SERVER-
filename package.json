@@ -2,7 +2,7 @@
   "name": "yuvi-badmosh-server",
   "version": "1.0.0",
   "description": "Luxury Server",
-  "main": "index.js", 
+  "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
@@ -11,5 +11,8 @@
     "ws": "^8.11.0",
     "fca-mafiya": "latest",
     "multer": "^1.4.5-lts.1"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
