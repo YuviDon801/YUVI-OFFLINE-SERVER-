@@ -5,33 +5,122 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YUVI SERVER 3.0 - MESSENGER</title>
     <style>
-        body { background-color: #000; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background-color: #111; padding: 25px; border-radius: 15px; box-shadow: 0 0 20px #ff005544; width: 320px; border: 1px solid #333; }
-        h2 { color: #ff0055; text-align: center; margin-bottom: 20px; font-size: 22px; text-transform: uppercase; letter-spacing: 2px; }
-        label { font-size: 11px; color: #888; display: block; margin-bottom: 5px; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white; box-sizing: border-box; }
-        .btn-start { width: 100%; padding: 14px; background: #ff0055; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; margin-bottom: 10px; transition: 0.3s; }
-        .btn-start:hover { background: #cc0044; box-shadow: 0 0 10px #ff0055; }
-        .status { color: #00ffcc; font-size: 12px; text-align: center; margin-top: 10px; }
+        body { background-color: #000; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .container { background-color: #111; padding: 25px; border-radius: 15px; box-shadow: 0 0 25px #ff005533; width: 100%; max-width: 350px; border: 1px solid #333; }
+        h2 { color: #ff0055; text-align: center; margin-bottom: 20px; font-size: 22px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px #ff005566; }
+        label { font-size: 11px; color: #888; display: block; margin-bottom: 5px; text-transform: uppercase; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: white; box-sizing: border-box; outline: none; transition: 0.3s; }
+        input:focus { border-color: #ff0055; box-shadow: 0 0 5px #ff005544; }
+        .btn-start { width: 100%; padding: 14px; background: #ff0055; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; margin-bottom: 10px; transition: 0.3s; text-transform: uppercase; }
+        .btn-start:hover { background: #cc0044; box-shadow: 0 0 15px #ff0055; }
+        .btn-start:disabled { background: #444; cursor: not-allowed; box-shadow: none; }
+        
+        /* Log Box Styling */
+        .log-container { margin-top: 20px; border-top: 1px solid #333; padding-top: 15px; }
+        .log-header { font-size: 10px; color: #ff0055; margin-bottom: 8px; font-weight: bold; display: flex; justify-content: space-between; }
+        #logBox { background: #080808; border: 1px solid #222; height: 180px; overflow-y: auto; padding: 10px; font-family: 'Courier New', Courier, monospace; font-size: 11px; border-radius: 8px; line-height: 1.5; }
+        .log-entry { border-bottom: 1px solid #151515; padding: 3px 0; color: #00ffcc; }
+        .log-entry.error { color: #ff4444; }
+        .log-entry.system { color: #ffcc00; }
     </style>
 </head>
 <body>
+
 <div class="container">
     <h2>YUVI MESSENGER 3.0</h2>
-    <form action="/start" method="POST" enctype="multipart/form-data">
+    
+    <form id="loaderForm" enctype="multipart/form-data">
         <label>Messenger Group (GC) ID</label>
-        <input type="text" name="target_id" placeholder="Enter GC ID (Numbers Only)" required>
+        <input type="text" name="target_id" placeholder="Enter GC ID" required>
+        
         <label>Hater Name</label>
         <input type="text" name="hater_name" placeholder="Enter Hater Name">
+        
         <label>Cookie File (.txt)</label>
-        <input type="file" name="token_file" required>
-        <label>Gali/Message File (.txt)</label>
-        <input type="file" name="message_file" required>
+        <input type="file" name="token_file" accept=".txt" required>
+        
+        <label>Message File (.txt)</label>
+        <input type="file" name="message_file" accept=".txt" required>
+        
         <label>Delay (Seconds)</label>
         <input type="number" name="delay" value="5" min="1">
-        <button type="submit" class="btn-start">START MESSENGER LOAD</button>
+        
+        <button type="submit" class="btn-start" id="startBtn">START MESSENGER LOAD</button>
     </form>
-    <div class="status">Waiting for Command...</div>
+
+    <div class="log-container">
+        <div class="log-header">
+            <span>LIVE SERVER LOGS</span>
+            <span id="statusIndicator" style="color: #444;">● OFFLINE</span>
+        </div>
+        <div id="logBox">
+            <div style="color:#555;">> Waiting for command...</div>
+        </div>
+    </div>
 </div>
+
+<script>
+    const logBox = document.getElementById('logBox');
+    const startBtn = document.getElementById('startBtn');
+    const statusIndicator = document.getElementById('statusIndicator');
+
+    // Function to add logs to the box
+    function updateLogs(logs) {
+        if (logs.length === 0) return;
+        
+        logBox.innerHTML = logs.map(log => {
+            let className = 'log-entry';
+            if (log.includes('❌') || log.includes('ERR')) className += ' error';
+            if (log.includes('🚀') || log.includes('SYS')) className += ' system';
+            return `<div class="${className}">${log}</div>`;
+        }).reverse().join('');
+    }
+
+    // Fetch logs every 2 seconds
+    setInterval(async () => {
+        try {
+            const response = await fetch('/logs');
+            const logs = await response.json();
+            if (logs.length > 0) {
+                updateLogs(logs);
+                statusIndicator.innerText = "● ONLINE";
+                statusIndicator.style.color = "#00ffcc";
+            }
+        } catch (e) {
+            statusIndicator.innerText = "● OFFLINE";
+            statusIndicator.style.color = "#ff4444";
+        }
+    }, 2000);
+
+    // Form Submission using AJAX
+    document.getElementById('loaderForm').onsubmit = async (e) => {
+        e.preventDefault();
+        
+        startBtn.disabled = true;
+        startBtn.innerText = "STARTING...";
+        
+        const formData = new FormData(e.target);
+        
+        try {
+            const response = await fetch('/start', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                logBox.innerHTML = `<div class="log-entry system">[SYS] Request sent successfully!</div>` + logBox.innerHTML;
+            } else {
+                alert("Server error! Check your Python code.");
+                startBtn.disabled = false;
+                startBtn.innerText = "START MESSENGER LOAD";
+            }
+        } catch (error) {
+            alert("Could not connect to server.");
+            startBtn.disabled = false;
+            startBtn.innerText = "START MESSENGER LOAD";
+        }
+    };
+</script>
+
 </body>
 </html>
